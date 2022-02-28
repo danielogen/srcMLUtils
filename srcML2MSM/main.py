@@ -45,7 +45,7 @@ def extractMethods(units, ns):
     numFloatParams = []
     numObjectParams = []
     isOverrideMethod = []
-    methodLOC = []
+    #methodLOC = []
 
     exprelist = [
         'srcml:class/srcml:block/srcml:function',
@@ -67,7 +67,14 @@ def extractMethods(units, ns):
         else:
             # split the token and get the last element
             _className = token[0].split('\\')[-1]
+
+        
+        # -------- extends ------
+        # class extended by current class instance
+        
     
+
+        # ------ method expression ---------
         for expression in exprelist:
             for methods in unit.findall(expression , ns):
 
@@ -107,12 +114,11 @@ def extractMethods(units, ns):
                 
 
                 # count the number of parameters in a method
-                _numParameters = len(methods.findall('srcml:parameter_list/srcml:parameter', ns))
+                params = methods.findall('srcml:parameter_list/srcml:parameter', ns)
+                params_name = methods.findall('srcml:parameter_list/srcml:parameter/srcml:decl/srcml:type/srcml:name', ns)
+                _numParameters = len(params)
 
-
-                # split types of parameters
-                type_of_params = methods.findall('srcml:parameter_list/srcml:parameter', ns)
-                
+                 # ----------- split types of parameters ---------------
                 _numIntParams = 0
                 _numStringParams = 0
                 _numBooleanParams = 0
@@ -123,33 +129,35 @@ def extractMethods(units, ns):
                 _numDoubleParams = 0
                 _numFloatParams = 0
                 _numObjectParams = 0
+                # -------------------------------------------------
 
-                for type_of_param in type_of_params:
-                    if type_of_param is not None:
-                        try:
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "int":
+                for item in params_name:
+                    try:
+                        if item is not None:
+                            # type_of_param = item.find('srcml:decl/srcml:type/srcml:name', ns).text
+                            type_of_param = item.text
+                            if type_of_param == "int":
                                 _numIntParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "String":
+                            if type_of_param == "String":
                                 _numStringParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "boolean":
+                            if type_of_param == "boolean":
                                 _numBooleanParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "byte":
+                            if type_of_param == "byte":
                                 _numByteParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "short":
+                            if type_of_param == "short":
                                 _numShortParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "long":
+                            if type_of_param == "long":
                                 _numLongParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "char":
+                            if type_of_param == "char":
                                 _numCharParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "double":
+                            if type_of_param == "double":
                                 _numDoubleParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text  == "float":
+                            if type_of_param == "float":
                                 _numFloatParams += 1
-                            if type_of_param.find('srcml:decl/srcml:type/srcml:name', ns).text \
-                                 not in ['int', 'String', 'boolean', 'byte','short', 'long', 'char', 'double', 'float']:
+                            if type_of_param not in ['int', 'String', 'boolean', 'byte', 'short', 'long', 'char', 'double', 'float', 'None']:
                                 _numObjectParams += 1
-                        except:
-                            print("error")
+                    except:
+                        print("error")
 
                 # determine if the method is overriden
                 _isOverrideMethod = False
@@ -160,15 +168,10 @@ def extractMethods(units, ns):
                 
 
                 # calculate the loc within a method
-                method_block = methods.find('srcml:block', ns)
-                if method_block is not None:
-                    _methodLOC = len(method_block)
-                    # print(_methodLOC)
-
-                        
-                        
-
-
+                # NOT YET COMPLETED
+                # method_block = methods.find('srcml:block', ns)
+                # if method_block is not None:
+                #     _methodLOC = len(method_block)
 
                 
                 # output in csv
@@ -208,36 +211,9 @@ def extractMethods(units, ns):
                 numFloatParams.append(_numFloatParams)
                 numObjectParams.append(_numObjectParams)
                 isOverrideMethod.append(_isOverrideMethod)
-                methodLOC.append(_methodLOC)
+                # methodLOC.append(_methodLOC)
 
-    cols = [
-            'fullclasspath',
-            'className', 
-            'isInnnerClass',
-            'methodName', 
-            'isPublicMethod',
-            'isPrivateMethod',
-            'isProtectedMethod', 
-            'isStaticMethod',
-            'isAbstractMethod',
-            'returnType',
-            'numParameters',
-            'numIntParams',
-            'numStringParams',
-            'numBooleanParams',
-            'numByteParams',
-            'numShortParams',
-            'numLongParams',
-            'numCharParams',
-            'numDoubleParams',
-            'numFloatParams',
-            'numObjectParams',
-            'isOverrideMethod',
-            'methodLOC'
-        ]
-    
-
-    rows = {
+    data = {
             'fullclasspath': fullclasspath,
             'className': className,
             'isInnerClass': isInnerClass,
@@ -250,7 +226,7 @@ def extractMethods(units, ns):
             'returnType': returnType,
             'numParameters': numParameters,
             'numIntParams': numIntParams,
-            'numStringParams': numIntParams,
+            'numStringParams': numStringParams,
             'numBooleanParams': numBooleanParams,
             'numByteParams': numByteParams,
             'numShortParams': numShortParams,
@@ -260,49 +236,50 @@ def extractMethods(units, ns):
             'numFloatParams': numFloatParams,
             'numObjectParams': numObjectParams,
             'isOverrideMethod': isOverrideMethod,
-            'methodLOC': methodLOC
+            # 'methodLOC': methodLOC
     }
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(data)
+    #print(df.head())
         
     # Writing dataframe to csv
-    df.to_csv(os.path.abspath(os.path.join('data/output/', 'srcML_K9_output_ver2.csv')))
+    df.to_csv(os.path.abspath(os.path.join('data/output/', 'srcML_K9_output_ver3.csv')))
        
 
 
 
-def outPutBuilder(**kwargs):
-    cols = [
-            'fullclasspath', 
-            'methodName',
-            'isPublicMethod',
-            'isPrivateMethod',
-            'isProtectedMethod',
-            'isStaticMethod',
-            'isAbstractMethod',
-            'numParameters'
-        ]
-    rows = []
-    dict = {}
+# def outPutBuilder(**kwargs):
+#     cols = [
+#             'fullclasspath', 
+#             'methodName',
+#             'isPublicMethod',
+#             'isPrivateMethod',
+#             'isProtectedMethod',
+#             'isStaticMethod',
+#             'isAbstractMethod',
+#             'numParameters'
+#         ]
+#     rows = []
+#     dict = {}
 
-    for key, value in kwargs.items():
-        key = []
-        dict = key.append(value)
+#     for key, value in kwargs.items():
+#         key = []
+#         dict = key.append(value)
             
 
-    # fullclasspath = []
-    # methodName = []
-    # isPublicMethod = []
-    # isPrivateMethod = []
-    # isProtectedMethod = []
-    # isAbstractMethod = []
-    # numParameters = []
+#     # fullclasspath = []
+#     # methodName = []
+#     # isPublicMethod = []
+#     # isPrivateMethod = []
+#     # isProtectedMethod = []
+#     # isAbstractMethod = []
+#     # numParameters = []
 
-    rows.append(dict)
-    df = pd.DataFrame(rows)
+#     rows.append(dict)
+#     df = pd.DataFrame(rows)
     
-    # Writing dataframe to csv
-    df.to_csv(os.path.abspath(os.path.join('data/output/', 'srcML_K9_output.csv')))
+#     # Writing dataframe to csv
+#     df.to_csv(os.path.abspath(os.path.join('data/output/', 'srcML_K9_output.csv')))
 
 
 
